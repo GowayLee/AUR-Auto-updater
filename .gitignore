@@ -1,0 +1,63 @@
+# Temporary files
+*.tmp
+*.log
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# AUR repository clones (created during package updates)
+*_aur_clone/
+*_aur_clone_tmp/
+
+# SSH keys and configurations
+*.key
+*.pem
+aur_auto_updater_*
+
+# Backup files
+*.bak
+*.backup
+~/.ssh/config.bak_*
+
+# Package build artifacts
+*.pkg.*
+*.tar.*
+*.zip
+*.rar
+*.7z
+
+# Downloaded files (temporary)
+*.AppImage
+*.deb
+*.rpm
+*.exe
+*.msi
+
+# Test output
+test_output/
+coverage/
+
+# Node modules (if any Node.js tools are used)
+node_modules/
+
+# Python cache (if any Python tools are used)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+*.atom/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

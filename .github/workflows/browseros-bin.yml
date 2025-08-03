@@ -1,0 +1,21 @@
+name: Auto-updater 4 AUR browseros-bin
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-aur:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🚀 Run AUR updater script
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          chmod +x ./packages/browseros-bin/update.sh
+          ./packages/browseros-bin/update.sh --verbose
+
