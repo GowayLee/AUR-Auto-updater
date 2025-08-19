@@ -108,8 +108,15 @@ get_current_version() {
     grep -m1 '^pkgver=' PKGBUILD | cut -d= -f2
 }
 
+# Get GitHub release API response
+get_github_release_api_response() {
+    local repo="$1"
+    log "INFO" "Fetching GitHub release API response from $repo"
+    curl -s "https://api.github.com/repos/$repo/releases/latest"
+}
+
 # Get latest GitHub release
-get_latest_release() {
+get_latest_release_tag_name() {
     local repo="$1"
     log "INFO" "Fetching latest GitHub release from $repo"
     curl -s "https://api.github.com/repos/$repo/releases/latest" |
@@ -130,34 +137,34 @@ needs_update() {
     local latest="$2"
 
     log "INFO" "Comparing versions"
-    if [ "$(printf '%s\n' "$current" "$latest" | sort -V | head -n1)" = "$current" ] && [ "$current" != "$latest" ]; then
+    if [ "$current" != "$latest" ]; then
         return 0  # Update needed
     else
         return 1  # No update needed
     fi
 }
 
-# Update PKGBUILD with new version and checksum
+# Update PKGBUILD with new version, checksum, and download URL
 update_pkgbuild() {
     local version="$1"
     local checksum="$2"
+    local source_url="$3"
 
     log "INFO" "Updating PKGBUILD"
     run_cmd sed -i "s/^pkgver=.*/pkgver=$version/" PKGBUILD
     run_cmd sed -i "s/^sha256sums=.*/sha256sums=('$checksum')/" PKGBUILD
+    if [[ -n "$source_url" ]]; then
+        run_cmd sed -i "s|^source=.*|source=(\"$source_url\")|" PKGBUILD
+    fi
 }
 
 # Update .SRCINFO with new version and checksum
 update_srcinfo() {
     local version="$1"
     local checksum="$2"
-    local repo="$3"
 
     log "INFO" "Updating .SRCINFO"
     run_cmd sed -i "s/^\tpkgver = .*/\tpkgver = $version/" .SRCINFO
-
-    local new_source="	source = browseros.AppImage::https://github.com/$repo/releases/download/v${version}/BrowserOS_v${version}_x64.AppImage"
-    run_cmd sed -i "/^\tsource = /c\\$new_source" .SRCINFO
     run_cmd sed -i "s/^\tsha256sums = .*/\tsha256sums = ('$checksum')/" .SRCINFO
 }
 
