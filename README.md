@@ -6,7 +6,9 @@ This repository contains automated updaters for multiple AUR (Arch User Reposito
 
 ```
 ├── packages/           # Individual package updaters
-│   └── browseros-bin/  # browseros-bin package
+│   ├── browseros-bin/  # browseros-bin package
+│   │   └── update.sh   # Update script
+│   └── ccline-bin/     # ccline-bin package
 │       └── update.sh   # Update script
 ├── scripts/           # Utility scripts
 │   └── add-package.sh # Script to add new packages
@@ -15,7 +17,8 @@ This repository contains automated updaters for multiple AUR (Arch User Reposito
 ├── templates/         # Package templates
 │   └── package-template.sh # Template for new packages
 └── .github/workflows/ # GitHub Actions workflows
-    └── browseros-bin.yml # Automated update workflow
+    ├── browseros-bin.yml # Automated update workflow
+    └── ccline-bin.yml    # Automated update workflow
 ```
 
 ## Adding a New Package
@@ -54,6 +57,7 @@ make add-package PACKAGE=my-app REPO=user/repo EMAIL=user@example.com
 
 # Test a specific package
 make test-dry-run PACKAGE=browseros-bin
+make test-dry-run PACKAGE=ccline-bin
 
 # Test all packages
 make test-all
@@ -99,3 +103,6 @@ All workflows require the `AUR_SSH_PRIVATE_KEY` GitHub repository secret for AUR
   - Upstream: https://github.com/browseros-ai/BrowserOS
   - AUR: https://aur.archlinux.org/packages/browseros-bin
 
+- **ccline-bin**: Auto-updater for CCometixLine binary package
+  - Upstream: https://github.com/Haleclipse/CCometixLine
+  - AUR: https://aur.archlinux.org/packages/ccline-bin
