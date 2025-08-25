@@ -10,7 +10,7 @@ This repository contains automated updaters for AUR (Arch User Repository) packa
 
 The repository uses GitHub Actions workflows to automate the update process:
 
-1. **Scheduled Checks**: Workflows run daily (cron: "0 0 * * *") to check for new releases
+1. **Scheduled Checks**: Workflows run daily (cron: "0 0 \* \* \*") to check for new releases
 2. **Manual Triggers**: Workflows can be manually triggered via workflow_dispatch
 3. **SSH-based AUR Access**: Uses SSH keys to securely push updates to AUR repositories
 
@@ -26,6 +26,11 @@ The repository uses GitHub Actions workflows to automate the update process:
   - AUR Package: https://aur.archlinux.org/packages/ccline-bin
   - Workflow: `.github/workflows/ccline-bin.yml`
 
+- **hitpag**: Auto-updater for the hitpag package
+  - Upstream: https://github.com/Hitmux/hitpag
+  - AUR Package: https://aur.archlinux.org/packages/hitpag
+  - Workflow: `.github/workflows/hitpag.yml`
+
 ## Workflow Process
 
 Each updater follows this pattern:
@@ -40,18 +45,20 @@ Each updater follows this pattern:
 ## Required Secrets
 
 Each workflow requires these GitHub repository secrets:
+
 - `AUR_SSH_PRIVATE_KEY`: SSH private key for AUR access
 
 ## File Structure
 
 ```
-.github/workflows/          # GitHub Actions workflows
+.github/workflows/         # GitHub Actions workflows
   browseros-bin.yml        # Auto-updater for browseros-bin package
   ccline-bin.yml           # Auto-updater for ccline-bin package
-packages/                   # Package-specific files
+packages/                  # Package-specific files
   browseros-bin/           # browseros-bin package files
   ccline-bin/              # ccline-bin package files
-shared/                     # Shared utilities
+  hitpag/                  # hitpag package files
+shared/                    # Shared utilities
   common.sh                # Common functions for all updaters
 README.md                  # Package documentation
 ```
@@ -78,3 +85,5 @@ To add a new AUR package auto-updater:
 
 - **browseros-bin**: Downloads AppImage files, uses GitHub API digest for checksums
 - **ccline-bin**: Downloads tar.gz files, calculates SHA256 checksums dynamically
+- **hitpag**: Downloads tarball of source code, skip calculating checksum
+
