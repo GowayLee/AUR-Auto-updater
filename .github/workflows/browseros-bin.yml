@@ -1,4 +1,4 @@
-name: Auto-updater 4 AUR browseros-bin
+name: browseros-bin updater
 
 on:
   schedule:

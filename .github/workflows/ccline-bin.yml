@@ -1,4 +1,4 @@
-name: Auto-updater 4 AUR ccline-bin
+name: ccline-bin updater
 
 on:
   schedule:
