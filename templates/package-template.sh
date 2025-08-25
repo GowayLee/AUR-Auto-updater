@@ -15,18 +15,56 @@ GITHUB_REPO="owner/repo"                # GitHub repository (owner/repo)
 COMMITTER_NAME="Auto-updater"           # Git committer name
 COMMITTER_EMAIL="your-email@example.com" # Git committer email
 
-# Optional: Custom download URL pattern
-# Override this function in your package script if needed
-get_download_url() {
-    local version="$1"
-    echo "https://github.com/$GITHUB_REPO/releases/download/v${version}/FILE_${version}_ARCH.EXT"
+# Package-specific GitHub release parsing function
+# Override this function in your package script with custom logic
+get_package_release_info() {
+    local repo="$1"
+    log "INFO" "Fetching release information from $repo"
+
+    local api_response
+    api_response=$(get_github_release_api_response "$repo")
+
+    # Extract tag_name (version)
+    local tag_name
+    tag_name=$(echo "$api_response" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
+
+    # Example: Find specific asset and extract download URL
+    # Customize this section based on your package's asset naming pattern
+    local download_url
+    download_url=$(echo "$api_response" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for asset in data['assets']:
+    if asset['name'].endswith('.tar.gz'):  # Customize this condition
+        print(asset['browser_download_url'])
+        break
+")
+
+    if [[ -z "$download_url" ]]; then
+        log "ERROR" "Could not find required asset in release"
+        exit 1
+    fi
+
+    # Calculate SHA256 checksum (or use API digest if available)
+    local checksum
+    checksum=$(get_sha256_checksum "$download_url")
+
+    echo "$tag_name $download_url $checksum"
 }
 
-# Optional: Custom source line for .SRCINFO
-# Override this function in your package script if needed
-get_source_line() {
+# Package-specific .SRCINFO update function
+# Override this function in your package script if custom logic is needed
+update_package_srcinfo() {
     local version="$1"
-    echo "	source = filename::$(get_download_url "$version")"
+    local checksum="$2"
+    local source_url="$3"
+
+    log "INFO" "Updating .SRCINFO"
+    run_cmd sed -i "s/^\\tpkgver = .*/\\tpkgver = $version/" .SRCINFO
+
+    local new_source="\tsource = $source_url"
+    run_cmd sed -i "/^\\tsource = /c\\\\$new_source" .SRCINFO
+    run_cmd sed -i "s/^\\tsha256sums = .*/\\tsha256sums = ('$checksum')/" .SRCINFO
 }
 
 # Parse command line arguments
@@ -48,28 +86,27 @@ clone_aur_repo
 CURRENT_VERSION=$(get_current_version)
 log "INFO" "Current version: $CURRENT_VERSION"
 
-# Get latest GitHub release
-LATEST_VERSION=$(get_latest_release "$GITHUB_REPO")
-log "INFO" "Latest version: $LATEST_VERSION"
+# Get package release information
+RELEASE_INFO=$(get_package_release_info "$GITHUB_REPO")
+LATEST_VERSION=$(echo "$RELEASE_INFO" | awk '{print $1}')
+DOWNLOAD_URL=$(echo "$RELEASE_INFO" | awk '{print $2}')
+SHASUM=$(echo "$RELEASE_INFO" | awk '{print $3}')
 
-# Get file SHA256
-DOWNLOAD_URL=$(get_download_url "$LATEST_VERSION")
-SHASUM=$(get_sha256_checksum "$DOWNLOAD_URL")
+log "INFO" "Latest version: $LATEST_VERSION"
+log "INFO" "Download URL: $DOWNLOAD_URL"
 log "INFO" "SHA256: $SHASUM"
 
 # Compare versions
 if needs_update "$CURRENT_VERSION" "$LATEST_VERSION"; then
     log "INFO" "New version available: $LATEST_VERSION"
-    
-    # Update files
-    update_pkgbuild "$LATEST_VERSION" "$SHASUM"
-    
-    # Custom .SRCINFO update (override if needed)
-    update_srcinfo "$LATEST_VERSION" "$SHASUM" "$GITHUB_REPO"
+
+    # Update files - customize the source line format as needed
+    update_pkgbuild "$LATEST_VERSION" "$SHASUM" "filename::$DOWNLOAD_URL"
+    update_package_srcinfo "$LATEST_VERSION" "$SHASUM" "filename::$DOWNLOAD_URL"
     
     # Commit and push changes
     commit_and_push "$LATEST_VERSION"
-    
+
     log "INFO" "Successfully updated $AUR_PACKAGE_NAME to version $LATEST_VERSION"
 else
     log "INFO" "No update needed"
